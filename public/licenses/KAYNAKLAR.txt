@@ -1,0 +1,151 @@
+Kur’an Atlası · Kaynaklar
+
+Arapça metin · Tanzil Project Uthmānī ve Simple-Clean, QuranLab dağıtımı.
+Telif bildirimi Tanzil-LICENSE.txt dosyasında yer alır.
+https://tanzil.net/docs/text_license
+https://huggingface.co/datasets/quranlab/quran/tree/b4e0edc2a0c8ffa6952c6f5fdf31a19acd75a068
+
+Lafız indeksi · Quranic Arabic Corpus, Kais Dukes. QuranLab morfoloji dağıtımı
+üzerinden ayet konumlarına eşlenmiştir. QAC-LICENSE.txt ve GPL-3.0-LICENSE.txt.
+https://corpus.quran.com/download/
+https://huggingface.co/datasets/quranlab/islamic-corpus-graph/tree/e8051c5338a3795e96deabc3e3e7f4c6416a4eff
+
+İ‘câz sayım tabloları · QuranLab, CC BY 4.0. OpenITI RELEASE v2025.1.9
+klasik eser kaynakları · CC BY-NC-SA 4.0. Tecvid verisi · Quran-Lab NPL 1.2.
+https://huggingface.co/datasets/quranlab/quran-ijaz/blob/main/LICENSES.md
+https://huggingface.co/datasets/Quran-Lab/quran-tajweed-phonetics/blob/main/LICENSE
+
+Tilavet · EveryAyah. Kelime zamanları · cpfair/quran-align, CC BY 4.0.
+Zaman aralıkları Atlas’ın kullandığı Osmanî metinle eşlenmiştir.
+https://everyayah.com/recitations_pages.html
+https://github.com/cpfair/quran-align
+
+Hüsrev sayfa görüntüleri · Hayrât Neşriyat dijital okuyucusu.
+https://kuran.hayrat.com.tr/kuran-oku/
+https://kuran.hayrat.com.tr/uyelik-sozlesmesi/
+
+Mavi Kur’an yaprağı · The Met Open Access, 2004.88. Lila Acheson Wallace Gift, 2004.
+https://www.metmuseum.org/art/collection/search/454662
+
+Fâtiha ve Bakara okuma sahneleri ile Atlas illüstrasyonları · ImageGen.
+Yazıtipleri · Amiri Quran, Cormorant Garamond ve DM Sans. OFL dosyaları eklenmiştir.
+
+Meâller · QuranEnc. Kaynak CSV başlıkları ve sürüm numaraları aşağıda yer alır.
+https://quranenc.com/en/home/about/terms
+
+Translation Info:
+#---------------------------
+# Translation of the meanings of the Noble Qur'an
+# Language: Turkish
+# Translation ID: turkish_rwwad
+# Source: https://quranenc.com
+# URL: https://quranenc.com/en/browse/turkish_rwwad
+# Last update: 2025-09-28 17:50:52 (v1.0.4-csv.1)
+# Check for updates: https://quranenc.com/check/turkish_rwwad/v1.0.4-csv.1
+# PLEASE DON'T REMOVE THIS IMPORTANT INFORMATION!
+#---------------------------
+https://quranenc.com/en/browse/turkish_rwwad
+
+Translation Info:
+#---------------------------
+# Translation of the meanings of the Noble Qur'an
+# Language: English
+# Translation ID: english_rwwad
+# Source: https://quranenc.com
+# URL: https://quranenc.com/en/browse/english_rwwad
+# Last update: 2026-11-09 11:35:56 (v1.0.21-csv.1)
+# Check for updates: https://quranenc.com/check/english_rwwad/v1.0.21-csv.1
+# PLEASE DON'T REMOVE THIS IMPORTANT INFORMATION!
+#---------------------------
+https://quranenc.com/en/browse/english_rwwad
+
+Translation Info:
+#---------------------------
+# Translation of the meanings of the Noble Qur'an
+# Language: French
+# Translation ID: french_rashid
+# Source: https://quranenc.com
+# URL: https://quranenc.com/en/browse/french_rashid
+# Last update: 2026-06-21 14:59:03 (v1.0.3-csv.1)
+# Check for updates: https://quranenc.com/check/french_rashid/v1.0.3-csv.1
+# PLEASE DON'T REMOVE THIS IMPORTANT INFORMATION!
+#---------------------------
+https://quranenc.com/en/browse/french_rashid
+
+Translation Info:
+#---------------------------
+# Translation of the meanings of the Noble Qur'an
+# Language: Spanish
+# Translation ID: spanish_garcia
+# Source: https://quranenc.com
+# URL: https://quranenc.com/en/browse/spanish_garcia
+# Last update: 2026-02-26 00:14:27 (v1.0.2-csv.1)
+# Check for updates: https://quranenc.com/check/spanish_garcia/v1.0.2-csv.1
+# PLEASE DON'T REMOVE THIS IMPORTANT INFORMATION!
+#---------------------------
+https://quranenc.com/en/browse/spanish_garcia
+
+Translation Info:
+#---------------------------
+# Translation of the meanings of the Noble Qur'an
+# Language: Indonesian
+# Translation ID: indonesian_sabiq
+# Source: https://quranenc.com
+# URL: https://quranenc.com/en/browse/indonesian_sabiq
+# Last update: 2025-06-02 16:39:44 (v1.1.3-csv.1)
+# Check for updates: https://quranenc.com/check/indonesian_sabiq/v1.1.3-csv.1
+# PLEASE DON'T REMOVE THIS IMPORTANT INFORMATION!
+#---------------------------
+https://quranenc.com/en/browse/indonesian_sabiq
+
+Translation Info:
+#---------------------------
+# Translation of the meanings of the Noble Qur'an
+# Language: German
+# Translation ID: german_bubenheim
+# Source: https://quranenc.com
+# URL: https://quranenc.com/en/browse/german_bubenheim
+# Last update: 2026-11-03 17:20:04 (v1.1.5-csv.1)
+# Check for updates: https://quranenc.com/check/german_bubenheim/v1.1.5-csv.1
+# PLEASE DON'T REMOVE THIS IMPORTANT INFORMATION!
+#---------------------------
+https://quranenc.com/en/browse/german_bubenheim
+
+Translation Info:
+#---------------------------
+# Translation of the meanings of the Noble Qur'an
+# Language: Portuguese
+# Translation ID: portuguese_nasr
+# Source: https://quranenc.com
+# URL: https://quranenc.com/en/browse/portuguese_nasr
+# Last update: 2026-02-23 15:36:35 (v1.4.1-csv.1)
+# Check for updates: https://quranenc.com/check/portuguese_nasr/v1.4.1-csv.1
+# PLEASE DON'T REMOVE THIS IMPORTANT INFORMATION!
+#---------------------------
+https://quranenc.com/en/browse/portuguese_nasr
+
+Translation Info:
+#---------------------------
+# Translation of the meanings of the Noble Qur'an
+# Language: Persian
+# Translation ID: persian_ih
+# Source: https://quranenc.com
+# URL: https://quranenc.com/en/browse/persian_ih
+# Last update: 2026-02-24 00:53:54 (v1.1.3-csv.1)
+# Check for updates: https://quranenc.com/check/persian_ih/v1.1.3-csv.1
+# PLEASE DON'T REMOVE THIS IMPORTANT INFORMATION!
+#---------------------------
+https://quranenc.com/en/browse/persian_ih
+
+Translation Info:
+#---------------------------
+# Translation of the meanings of the Noble Qur'an
+# Language: Urdu
+# Translation ID: urdu_junagarhi
+# Source: https://quranenc.com
+# URL: https://quranenc.com/en/browse/urdu_junagarhi
+# Last update: 2025-08-13 14:37:29 (v1.1.3-csv.1)
+# Check for updates: https://quranenc.com/check/urdu_junagarhi/v1.1.3-csv.1
+# PLEASE DON'T REMOVE THIS IMPORTANT INFORMATION!
+#---------------------------
+https://quranenc.com/en/browse/urdu_junagarhi

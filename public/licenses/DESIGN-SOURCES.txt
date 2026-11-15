@@ -1,0 +1,42 @@
+Quran Atlas experience — implementation and reference notes
+
+Satoshi UI font: Fontshare / Indian Type Foundry.
+Source: https://www.fontshare.com/fonts/satoshi
+License: https://www.fontshare.com/licenses/itf-free-font-license
+Fonts are self-hosted; Arabic scripture retains the existing Amiri Quran font.
+
+Selection ripple sprite: pixelfx water/ripples, recolored to yellow light and graphite.
+https://github.com/patch-gg/pixelfx/blob/main/src/fx/water/ripples.js
+Copyright 2026 Patch / Hugo Duprez. MIT; see pixelfx-LICENSE.txt.
+
+Design studies (independent layout/geometry implementation, no copied paid assets):
+https://iamtechartist.github.io/every-joule-lesson1/
+https://learn-arduino-red.vercel.app/
+https://reactbits.dev/tools/texture-lab
+https://easings.net/
+https://github.com/yihui-dev/awesome-opus5-5-videos
+https://scrollshaders.com/
+https://recent.design/
+https://60fps.design/
+https://scrolltide.co/
+https://motionvideo.xyz/
+
+Reading workbench studies (November 2026): Mobbin task/result grouping;
+60fps transport controls and feedback; Spline/Three.js camera orientation;
+React Bits Texture Lab Stardust/Letterpress surface and separate controls;
+Scroll Shaders cached/offscreen motion and Easings state transitions.
+Native DOM, SVG masks and Canvas implement the interface; no paid code,
+third-party runtime or imagery was copied from these galleries.
+https://mobbin.com/
+https://spline.design/
+https://threejs-journey.com/
+https://lottiefiles.com/
+https://3dicons.co/
+https://coolors.co/
+https://motionsites.ai/
+https://landdding.com/
+https://fontinlogo.com/
+Land-book was requested; its public page returned HTTP 403 during review.
+https://land-book.com/
+
+All pre-existing text/translation/data licenses continue to apply.
