@@ -70,12 +70,16 @@ workbench_css = (SRC / 'atlas-workbench.css').read_text().replace('__ICON_RULES_
 workbench_css_name = asset('atlas-workbench', workbench_css.encode(), 'css')
 subprocess.run(['node', '--check', str(SRC / 'atlas-workbench.js')], check=True)
 workbench_js_name = asset('atlas-workbench', (SRC / 'atlas-workbench.js').read_bytes(), 'js')
+mobile_css_name = asset('atlas-mobile', (SRC / 'atlas-mobile.css').read_bytes(), 'css')
+subprocess.run(['node', '--check', str(SRC / 'atlas-mobile.js')], check=True)
+mobile_js_name = asset('atlas-mobile', (SRC / 'atlas-mobile.js').read_bytes(), 'js')
 
 pattern = r'<script type="application/json" id="localization-data">([\s\S]*?)</script>'
 match = re.search(pattern, html)
 copy = json.loads(match.group(1))
 new_copy = json.loads((SRC / 'experience-copy.json').read_text())
 new_copy.update(json.loads((SRC / 'workbench-copy.json').read_text()))
+new_copy.update(json.loads((SRC / 'mobile-copy.json').read_text()))
 languages = ['tr', 'en', 'ar', 'fr', 'es', 'id']
 for key, versions in new_copy.items():
     assert len(versions) == len(languages), key
@@ -190,8 +194,11 @@ chrome = '''
 position = html.index('<script type="application/json" id="atlas-data">')
 html = html[:position]+chrome+html[position:]
 html = enhance(html, copy)
-html = html.replace('</head>', f'<link rel="preload" href="assets/{font_names[400]}" as="font" type="font/woff2" crossorigin>\n<link rel="stylesheet" href="assets/{css_name}">\n<link rel="stylesheet" href="assets/{workbench_css_name}">\n</head>', 1)
-html = html.replace('</body>', f'<script src="assets/{cosmos_name}"></script>\n<script src="assets/{js_name}"></script>\n<script src="assets/{workbench_js_name}"></script>\n</body>', 1)
+mobile_markup = (SRC / 'atlas-mobile.html').read_text()
+position = html.index('<script type="application/json" id="atlas-data">')
+html = html[:position] + mobile_markup + '\n' + html[position:]
+html = html.replace('</head>', f'<link rel="preload" href="assets/{font_names[400]}" as="font" type="font/woff2" crossorigin>\n<link rel="stylesheet" href="assets/{css_name}">\n<link rel="stylesheet" href="assets/{workbench_css_name}">\n<link rel="stylesheet" href="assets/{mobile_css_name}">\n</head>', 1)
+html = html.replace('</body>', f'<script src="assets/{cosmos_name}"></script>\n<script src="assets/{js_name}"></script>\n<script src="assets/{workbench_js_name}"></script>\n<script src="assets/{mobile_js_name}"></script>\n</body>', 1)
 font_credit = '<p class="route-cite">Satoshi © 2017–2021 Indian Type Foundry · <a href="https://www.fontshare.com/fonts/satoshi" target="_blank" rel="noopener">Fontshare</a> · <a href="licenses/SATOSHI-NOTICE.txt" target="_blank" rel="noopener">ITF</a></p>'
 html, credit_count = re.subn(r'(<p><span data-i18n="creditsTranslations">[\s\S]*?</p>)', lambda match: match.group(1)+font_credit, html, count=1)
 assert credit_count == 1, 'Font ownership credit must appear with design/production credits'
@@ -269,7 +276,7 @@ for path in STAGE.rglob('*'):
         packed.write_bytes(gzip.compress(path.read_bytes(), compresslevel=9, mtime=0))
         import os
         os.utime(packed, (path.stat().st_atime, path.stat().st_mtime))
-manifest = {'palette':PALETTE['id'],'mark':mark_name,'css':css_name,'js':js_name,'cosmos':cosmos_name,'workbench_css':workbench_css_name,'workbench_js':workbench_js_name,'fonts':font_names,'ripple':ripple_name,'html_sha256':hashlib.sha256(html.encode()).hexdigest()}
+manifest = {'palette':PALETTE['id'],'mark':mark_name,'css':css_name,'js':js_name,'cosmos':cosmos_name,'workbench_css':workbench_css_name,'workbench_js':workbench_js_name,'mobile_css':mobile_css_name,'mobile_js':mobile_js_name,'fonts':font_names,'ripple':ripple_name,'html_sha256':hashlib.sha256(html.encode()).hexdigest()}
 (ROOT / 'deployment/palette-preview-manifest.json').write_text(json.dumps(manifest, indent=2)+'\n')
 print('Built stage:', STAGE)
 print('Scripture/source datasets preserved byte-for-byte; core JavaScript differs only in Canvas colours.')

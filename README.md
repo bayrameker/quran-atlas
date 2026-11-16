@@ -79,8 +79,13 @@ Ekran görüntülerini tam boyutunda açmak için üzerlerine tıklayabilirsiniz
 
 ## Okuma görünümü
 
-Telefon ve masaüstünde âyet metni, meâl, kaynak ve dinleme kontrolleri
-birlikte kullanılabilir. Âyet işaretleri, son okuma ve görünüm tercihleri
+Telefon ve tablette **Oku · Atlas · İncele · Diğer** alt menüsüyle doğrudan
+ilgili alana geçilir. Okuma ekranında âyet ve meâl öne çıkar; kaynaklar ve
+ayarlar ihtiyaç duyulduğunda açılır. Harita üzerindeyken sayfa kaydırılabilir;
+tam ekranda tek parmakla sürükleme ve iki parmakla yakınlaştırma kullanılır.
+Karşılaştırmalar ve mushaf sayfaları sekmelerle tek tek incelenir.
+
+Masaüstü görünümü korunur. Âyet işaretleri, son okuma ve görünüm tercihleri
 tarayıcıda saklanır. Yazı boyutu ve zemin dokusu ayarlanabilir; azaltılmış
 hareket tercihi gözetilir.
 
@@ -143,6 +148,7 @@ yapılandırmalar ve erişim bilgileri depoya dahil değildir.
 | `src/atlas-experience.*` | Arayüz, okuma tercihleri ve etkileşimler. |
 | `src/atlas-cosmos.js` | Canvas galaksi ve nokta yerleşimi. |
 | `src/atlas-workbench.*` | Çalışma alanları, ikonlar ve ses kontrolleri. |
+| `src/atlas-mobile.*` | Telefon ve tablete özel gezinme, dokunmatik kontroller ve sade görünümler. |
 | `src/*copy.json`, `src/palette.json` | Arayüz metinleri ve palet. |
 | `src/vendor/` | Yerel font/sprite girdileri ve ilgili lisanslar. |
 | `public/` | Çalıştırılabilir site, veri ve lisans dosyaları. |

@@ -1,0 +1,38 @@
+<button type="button" id="mobile-search-trigger" class="mobile-only mobile-header-search" data-icon="search" data-aria="mFind"></button>
+<div class="mobile-only mobile-page-heading" id="mobile-heading"><div><h1 id="mobile-page-title"></h1><p id="mobile-page-hint"></p></div></div>
+<nav class="mobile-only mobile-nav" id="mobile-nav" data-aria="mainNav">
+  <button type="button" data-mobile-nav="read" data-icon="book"><span data-i18n="mRead"></span></button>
+  <button type="button" data-mobile-nav="map" data-icon="network"><span data-i18n="mAtlas"></span></button>
+  <button type="button" data-mobile-nav="study" data-icon="calculator"><span data-i18n="mStudy"></span></button>
+  <button type="button" id="mobile-menu-open" data-icon="library"><span data-i18n="mMore"></span></button>
+</nav>
+<div class="mobile-only mobile-map-actions" id="mobile-map-actions"><button type="button" id="mobile-pick-surah" data-icon="search" data-i18n="mPickSurah"></button></div>
+<p class="mobile-only mobile-map-hint" id="mobile-map-hint"></p>
+<div class="mobile-only mobile-map-selection" id="mobile-map-selection"><div><strong id="mobile-map-reference"></strong><span id="mobile-map-count"></span></div><button type="button" id="mobile-open-verse" data-icon="book" data-i18n="mOpenVerse"></button></div>
+<div class="mobile-only mobile-guide-selects" id="mobile-guide-selects">
+  <label><span data-i18n="mGuidePick"></span><select id="mobile-guide-route"></select></label>
+  <label><span data-i18n="mScenePick"></span><select id="mobile-guide-scene"></select></label>
+</div>
+<div class="mobile-only mobile-page-tabs" id="mobile-page-tabs" role="group" data-aria="husrevTitle"><button type="button" data-mobile-page="A" aria-pressed="true" data-i18n="mPageA"></button><button type="button" data-mobile-page="B" aria-pressed="false" data-i18n="mPageB"></button></div>
+<label class="mobile-only mobile-husrev-preset" id="mobile-husrev-preset-field"><span data-i18n="husrevExamples"></span><select id="mobile-husrev-preset"></select></label>
+<div class="mobile-only mobile-compare-tabs" id="mobile-compare-tabs" role="tablist" data-aria="comparison"><button type="button" data-mobile-compare="a" role="tab" aria-selected="true" aria-controls="compare-card-a">A</button><button type="button" data-mobile-compare="b" role="tab" aria-selected="false" aria-controls="compare-card-b" tabindex="-1">B</button><button type="button" data-mobile-compare="evidence" role="tab" aria-selected="false" aria-controls="comparison-evidence" tabindex="-1" data-i18n="recordedEvidence"></button></div>
+<dialog class="mobile-only mobile-sheet" id="mobile-menu" aria-labelledby="mobile-menu-title">
+  <header><h2 id="mobile-menu-title" data-i18n="mMore"></h2><button type="button" data-mobile-close data-icon="close" data-aria="close"></button></header>
+  <div class="mobile-sheet-body mobile-menu-items">
+    <button type="button" data-mobile-go="guide" data-icon="book" data-i18n="studyRoute"></button>
+    <button type="button" data-mobile-go="pages" data-icon="pages" data-i18n="husrevJump"></button>
+    <button type="button" data-mobile-dialog="experience-saved" data-icon="bookmark" data-i18n="savedVerses"></button>
+    <button type="button" data-mobile-go="sources" data-icon="source" data-i18n="sources"></button>
+    <button type="button" data-mobile-go="library" data-icon="library" data-i18n="library"></button>
+    <button type="button" data-mobile-dialog="experience-settings" data-icon="settings" data-i18n="mSettings"></button>
+    <button type="button" id="mobile-start-fatiha" data-icon="book" data-i18n="mFirstVerse"></button>
+  </div>
+</dialog>
+<dialog class="mobile-only mobile-sheet mobile-search-sheet" id="mobile-search" aria-labelledby="mobile-search-title">
+  <header><h2 id="mobile-search-title" data-i18n="mFind"></h2><button type="button" data-mobile-close data-icon="close" data-aria="close"></button></header>
+  <div class="mobile-sheet-body"><div id="mobile-search-slot"></div><p class="mobile-search-example" data-i18n="mSearchExample"></p><h3 data-i18n="mSurahList"></h3><div id="mobile-surah-list" class="mobile-surah-list"></div></div>
+</dialog>
+<dialog class="mobile-only mobile-sheet" id="mobile-tools" aria-labelledby="mobile-tools-title">
+  <header><h2 id="mobile-tools-title" data-i18n="mTools"></h2><button type="button" data-mobile-close data-icon="close" data-aria="close"></button></header>
+  <div class="mobile-sheet-body"><p class="mobile-tool-reference" id="mobile-tool-reference"></p><div id="mobile-verse-actions" class="mobile-menu-items"></div><details class="mobile-disclosure"><summary data-i18n="mOptions"></summary><div id="mobile-reading-settings"></div></details><details class="mobile-disclosure"><summary data-i18n="mSource"></summary><div id="mobile-translation-source"></div></details></div>
+</dialog>
