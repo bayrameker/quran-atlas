@@ -382,7 +382,13 @@
     mapCosmos.width=sky.width;mapCosmos.height=sky.height;
     const context=mapCosmos.getContext('2d');if(context)context.drawImage(sky,0,0);
   }
-  new ResizeObserver(paintMapCosmos).observe(mapViz);paintMapCosmos();
+  let mapResizeTimer;
+  new ResizeObserver(()=>{
+    if(!document.body.classList.contains('mobile-mode')){paintMapCosmos();return;}
+    // Keep the cached sky while Safari animates its browser chrome; drawing
+    // the noise texture at every intermediate height stalls touch handling.
+    clearTimeout(mapResizeTimer);mapResizeTimer=setTimeout(paintMapCosmos,120);
+  }).observe(mapViz);paintMapCosmos();
   let cameraPaintTimer;
   addEventListener('atlas-camera-change',()=>{clearTimeout(cameraPaintTimer);cameraPaintTimer=setTimeout(paintMapCosmos,100);});
   visibility.observe(heroCanvas);visibility.observe(mapViz);

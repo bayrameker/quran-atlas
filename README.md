@@ -86,6 +86,9 @@ tam ekranda tek parmakla sürükleme ve iki parmakla yakınlaştırma kullanıl�
 Karşılaştırmalar ve mushaf sayfaları sekmelerle tek tek incelenir.
 Mobilde bölümler arasında geçerken kaydırma konumu korunur. Açılır araçlar
 arkadaki sayfayı sabitler; arama penceresi klavyenin bıraktığı alana uyum sağlar.
+Ekran döndürüldüğünde okunan metnin konumu korunur. Kısa yatay ekranlarda
+kontroller sadeleşir; tarayıcı çubuğunun yükseklik değişimleri harita
+sürüklemesini kesmez.
 
 Masaüstü görünümü korunur. Âyet işaretleri, son okuma ve görünüm tercihleri
 tarayıcıda saklanır. Yazı boyutu ve zemin dokusu ayarlanabilir; azaltılmış

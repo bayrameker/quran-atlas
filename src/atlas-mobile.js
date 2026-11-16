@@ -13,7 +13,9 @@
   const allDialogs=Array.from(document.querySelectorAll('dialog'));
   let enabled=false,view='read',searchView='read',selectionTarget=null,syncFrame=0;
   let scrollLock=null,previousScrollRestoration='auto';
-  let viewportFrame=0;
+  let viewportFrame=0,viewportTimer=0,viewportMetrics=null,anchorTimer=0;
+  let readingAnchor=null,pendingAnchor=null,inputVersion=0,activatedBefore=false;
+  const viewportElements=new Set(),viewportHeights=new Map();
   const text=(node,value)=>{if(node&&node.textContent!==value)node.textContent=value;};
   const attr=(node,key,value)=>{if(node&&node.getAttribute(key)!==String(value))node.setAttribute(key,String(value));};
   const iconButton=(label,icon,fn)=>{const b=action(label,fn);b.dataset.icon=icon;return b;};
@@ -77,30 +79,92 @@
     }
     syncDialogViewport();
   }
-  function syncDialogViewport(){
-    const viewport=window.visualViewport;
-    const typing=/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName||'');
-    const keyboard=enabled&&viewport&&Math.abs(viewport.scale-1)<.05&&typing&&innerHeight-viewport.height>120;
-    if(document.body.classList.contains('mobile-keyboard')!==Boolean(keyboard))document.body.classList.toggle('mobile-keyboard',Boolean(keyboard));
-    for(const dialog of allDialogs){
-      const fit=Boolean(keyboard&&dialog.open);
-      if(dialog.classList.contains('mobile-keyboard-fit')!==fit)dialog.classList.toggle('mobile-keyboard-fit',fit);
-      if(fit){
-        for(const [key,value]of [['height',Math.floor(viewport.height)+'px'],['top',Math.floor(viewport.offsetTop)+'px']]){
-          if(dialog.style.getPropertyValue('--mobile-dialog-'+key)!==value)dialog.style.setProperty('--mobile-dialog-'+key,value);
-        }
-      }else if(dialog.style.getPropertyValue('--mobile-dialog-height')){
-        dialog.style.removeProperty('--mobile-dialog-height');dialog.style.removeProperty('--mobile-dialog-top');
-      }
+  function textEntry(){return document.activeElement?.matches('textarea,input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit])');}
+  function headerBottom(){return Math.max(0,document.querySelector('.site-header').getBoundingClientRect().bottom);}
+  function captureAnchor(){
+    if(!enabled||expanded()||allDialogs.some(d=>d.open)||textEntry())return;
+    const x=innerWidth/2,y=headerBottom()+24;
+    const hit=document.elementFromPoint(x,y);
+    const node=hit?.closest('.word-result,.arabic,.translation-text,.guide-quote,.library-card,.study-results,.reader');
+    if(!node)return;
+    // Keep a text position through reflow, including inside a long Arabic verse.
+    let range=document.caretRangeFromPoint?.(x,y);
+    if(!range&&document.caretPositionFromPoint){const caret=document.caretPositionFromPoint(x,y);if(caret){range=document.createRange();range.setStart(caret.offsetNode,caret.offset);range.collapse(true);}}
+    if(range?.startContainer.nodeType===Node.TEXT_NODE&&node.contains(range.startContainer)){
+      range.setEnd(range.startContainer,Math.min(range.startOffset+1,range.startContainer.length));
+    }else range=null;
+    const rect=range?.getBoundingClientRect()||node.getBoundingClientRect();
+    readingAnchor={node,range,offset:rect.top-headerBottom(),view,width:innerWidth};
+  }
+  function restoreWidthAnchor(){
+    const anchor=pendingAnchor;pendingAnchor=null;
+    if(!anchor||!enabled||anchor.view!==view||anchor.inputVersion!==inputVersion||!anchor.node.isConnected||expanded()||textEntry())return;
+    if(!anchor.node.getClientRects().length)return;
+    const rect=anchor.range?.getBoundingClientRect()||anchor.node.getBoundingClientRect();
+    scrollToPosition(Math.max(0,currentScroll()+rect.top-headerBottom()-anchor.offset));
+    captureAnchor();
+  }
+  addEventListener('scroll',()=>{
+    if(!enabled||scrollLock)return;
+    clearTimeout(anchorTimer);anchorTimer=setTimeout(captureAnchor,120);
+  },{passive:true});
+  for(const type of ['pointerdown','wheel'])document.addEventListener(type,()=>{inputVersion++;},{capture:true,passive:true});
+  function clearViewportElement(node){
+    node.classList.remove('mobile-viewport-fit','mobile-keyboard-fit');
+    for(const key of ['height','top','bottom'])node.style.removeProperty('--mobile-view-'+key);
+    viewportElements.delete(node);
+  }
+  function syncDialogViewport(settled=true){
+    if(!enabled){
+      for(const node of [...viewportElements])clearViewportElement(node);
+      document.body.classList.remove('mobile-keyboard','mobile-viewport-short');
+      get('mobile-nav').style.removeProperty('--mobile-nav-offset');return;
     }
+    const viewport=window.visualViewport;
+    // Page pinch zoom belongs to the browser; never reinterpret it as a keyboard.
+    if(viewport&&Math.abs(viewport.scale-1)>.05)return;
+    const width=innerWidth,height=Math.max(1,Math.round(viewport?.height||innerHeight));
+    const top=Math.max(0,Math.round(viewport?.offsetTop||0));
+    const bottom=Math.max(0,innerHeight-height-top),typing=textEntry();
+    const maximum=Math.max(viewportHeights.get(width)||innerHeight,typing?innerHeight:height);
+    viewportHeights.set(width,maximum);
+    const keyboard=Boolean(typing&&(innerHeight-height>120||maximum-height>Math.max(140,maximum*.2)));
+    const widthChanged=viewportMetrics&&Math.abs(viewportMetrics.width-width)>1;
+    if(widthChanged){
+      if(readingAnchor?.width!==width)pendingAnchor=readingAnchor?{...readingAnchor,inputVersion}:null;
+      clearMapTouches();
+    }
+    const interacting=mapTouches.size>0;
+    if(document.body.classList.contains('mobile-keyboard')!==keyboard)document.body.classList.toggle('mobile-keyboard',keyboard);
+    if(document.body.classList.contains('mobile-viewport-short')!==(height<500))document.body.classList.toggle('mobile-viewport-short',height<500);
+    const offset=-bottom+'px',nav=get('mobile-nav');
+    if(nav.style.getPropertyValue('--mobile-nav-offset')!==offset)nav.style.setProperty('--mobile-nav-offset',offset);
+    const overlays=allDialogs.filter(d=>d.open);
+    if(expanded())overlays.push(document.querySelector('.atlas-grid'));
+    for(const node of [...viewportElements])if(!overlays.includes(node))clearViewportElement(node);
+    for(const node of overlays){
+      if(!node.classList.contains('mobile-viewport-fit'))node.classList.add('mobile-viewport-fit');
+      node.classList.toggle('mobile-keyboard-fit',keyboard);
+      for(const [key,value]of [['height',height+'px'],['top',top+'px'],['bottom',bottom+'px']]){
+        if(node.style.getPropertyValue('--mobile-view-'+key)!==value)node.style.setProperty('--mobile-view-'+key,value);
+      }
+      viewportElements.add(node);
+    }
+    const footer=get('comparison').querySelector('.dialog-footer'),scroll=get('comparison-scroll');
+    if(height<500&&get('comparison').open){if(footer.parentNode!==scroll)move(footer,scroll,scroll.firstChild);}
+    else restore(footer);
+    viewportMetrics={width,height,top,keyboard};
+    if(settled&&!interacting)restoreWidthAnchor();
   }
   function scheduleViewport(){
-    if(!enabled||viewportFrame)return;
-    if(!allDialogs.some(d=>d.open)&&!document.body.classList.contains('mobile-keyboard')&&!/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName||''))return;
-    viewportFrame=requestAnimationFrame(()=>{viewportFrame=0;syncDialogViewport();});
+    if(!enabled)return;
+    if(!viewportFrame)viewportFrame=requestAnimationFrame(()=>{viewportFrame=0;syncDialogViewport(false);});
+    clearTimeout(viewportTimer);viewportTimer=setTimeout(()=>{viewportTimer=0;syncDialogViewport(true);},120);
   }
   window.visualViewport?.addEventListener('resize',scheduleViewport,{passive:true});
-  window.visualViewport?.addEventListener('scroll',scheduleViewport,{passive:true});
+  window.visualViewport?.addEventListener('scroll',()=>{if(scrollLock||textEntry())scheduleViewport();},{passive:true});
+  addEventListener('resize',scheduleViewport,{passive:true});
+  addEventListener('pageshow',()=>{if(enabled){syncScrollLock();scheduleViewport();}});
   document.addEventListener('focusin',scheduleViewport);document.addEventListener('focusout',scheduleViewport);
   const lockWatcher=new MutationObserver(syncScrollLock);
   allDialogs.forEach(d=>lockWatcher.observe(d,{attributes:true,attributeFilter:['open']}));
@@ -126,7 +190,7 @@
     }
     rememberView(write,hash);
     if(scroll&&(changing||reset))scrollToPosition(reset?0:(scrollPositions.get(view)||0));
-    requestAnimationFrame(()=>{if(!enabled||view!=='map')return;limitAtlasPan();updateMap();});
+    requestAnimationFrame(()=>{if(!enabled)return;if(view==='map'){limitAtlasPan();updateMap();}captureAnchor();});
     scheduleSync();
   }
   function openSheet(id,opener=document.activeElement) {
@@ -278,8 +342,19 @@
     for(const id of mapTouches.keys())if(graph.hasPointerCapture(id))graph.releasePointerCapture(id);
     mapTouches.clear();gestureStart=null;mapBounds=null;
     document.body.classList.remove('mobile-interacting');
+    if(enabled)scheduleViewport();
   }
   function touchPoint(event){return {x:event.clientX-mapBounds.left,y:event.clientY-mapBounds.top};}
+  new ResizeObserver(()=>{
+    if(!enabled||!mapTouches.size||!mapBounds)return;
+    const next=graph.getBoundingClientRect();
+    if(Math.abs(next.width-mapBounds.width)>1){clearMapTouches();return;}
+    flushGesture();
+    for(const point of mapTouches.values()){
+      point.x+=mapBounds.left-next.left;point.y+=mapBounds.top-next.top;
+    }
+    mapBounds=next;gestureStart=touchSnapshot();
+  }).observe(graph);
   graph.addEventListener('pointerdown',event=>{
     if(!enabled||event.pointerType==='mouse')return;
     event.stopImmediatePropagation();
@@ -307,7 +382,6 @@
     if(mapTouches.size)gestureStart=touchSnapshot();else clearMapTouches();
   },true);
   addEventListener('blur',clearMapTouches);
-  addEventListener('resize',()=>{if(mapTouches.size)clearMapTouches();});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)clearMapTouches();});
   get('atlas-expand').addEventListener('click',()=>{
     if(!enabled)return;
@@ -499,6 +573,7 @@
     move(get('atlas-expand'),get('mobile-map-actions'));
     move(get('atlas-camera-toggle'),get('mobile-map-actions'));
     move(document.querySelector('.map-tools'),get('map-viz'));
+    move(get('immersive-close'),document.querySelector('.atlas-grid'));
     attr(get('map-viz'),'aria-describedby','mobile-map-hint');
     move(get('mobile-map-hint'),document.querySelector('.map'),document.querySelector('.map-footer'));
     move(get('mobile-map-selection'),document.querySelector('.map'),document.querySelector('.map-footer'));
@@ -515,14 +590,18 @@
     if(!location.hash||location.hash==='#ust'){
       try{const stored=JSON.parse(localStorage.getItem('quran-atlas-experience-v1'));const last=stored?.history?.[0];originalSelect(verseId.has(last)?verseId.get(last):0,{writeHash:false});}catch{originalSelect(0,{writeHash:false});}
     }
-    navigate(explicit||'read',{write:false,hash:location.hash||hashes.read(),reset:true});
+    navigate(explicit||'read',{write:false,hash:location.hash||hashes.read(),reset:!activatedBefore});
+    activatedBefore=true;syncDialogViewport();
   }
   function deactivate() {
     if(!enabled)return;
+    scrollPositions.set(view,currentScroll());
     clearMapTouches();
     if(document.querySelector('.atlas-immersive'))get('immersive-close').click();
     for(const d of mobileDialogs)if(d.open)d.close();
     enabled=false;
+    clearTimeout(viewportTimer);clearTimeout(anchorTimer);
+    if(viewportFrame)cancelAnimationFrame(viewportFrame);viewportFrame=0;
     syncScrollLock();history.scrollRestoration=previousScrollRestoration;
     for(const frame of scanFrames.values())cancelAnimationFrame(frame);scanFrames.clear();
     get('map-center').style.removeProperty('transform');
