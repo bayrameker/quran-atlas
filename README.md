@@ -84,6 +84,8 @@ ilgili alana geçilir. Okuma ekranında âyet ve meâl öne çıkar; kaynaklar v
 ayarlar ihtiyaç duyulduğunda açılır. Harita üzerindeyken sayfa kaydırılabilir;
 tam ekranda tek parmakla sürükleme ve iki parmakla yakınlaştırma kullanılır.
 Karşılaştırmalar ve mushaf sayfaları sekmelerle tek tek incelenir.
+Mobilde bölümler arasında geçerken kaydırma konumu korunur. Açılır araçlar
+arkadaki sayfayı sabitler; arama penceresi klavyenin bıraktığı alana uyum sağlar.
 
 Masaüstü görünümü korunur. Âyet işaretleri, son okuma ve görünüm tercihleri
 tarayıcıda saklanır. Yazı boyutu ve zemin dokusu ayarlanabilir; azaltılmış

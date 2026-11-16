@@ -414,6 +414,10 @@
   let scrollFrame=0;
   function updateDocumentPosition() {
     scrollFrame=0;
+    // The compact interface has no document progress bar or chapter rail.
+    // Updating an inherited root variable on every swipe invalidates the
+    // styles of the entire reading/data tree, including hidden sections.
+    if(document.body.classList.contains('mobile-mode')) return;
     const max=document.documentElement.scrollHeight-innerHeight;
     const progress=max>0?Math.min(1,scrollY/max):0;
     document.documentElement.style.setProperty('--page-progress',String(progress));
@@ -443,6 +447,7 @@
   addEventListener('wheel',()=>{entryInterrupted=true;},{once:true,passive:true});
   document.fonts.ready.then(()=>{
     scheduleHero();scheduleMapDraw();
+    if(document.body.classList.contains('mobile-mode')) return;
     if(entryInterrupted || location.hash!==entryHash) return;
     const target=/^#ayet-\d+-\d+$/.test(entryHash)?get('harita'):get(entryHash.slice(1));
     if(!target || !entryHash) return;

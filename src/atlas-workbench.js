@@ -218,5 +218,7 @@
   const baseRenderUI=renderGlobalUi;
   renderGlobalUi=(...args)=>{const value=baseRenderUI(...args);decorate();syncCamera();cardOptions();transports.forEach(p=>p.refresh());return value;};
   cardOptions();decorate();renderAbjadWorkbench();updateMap();
-  if(['#ebced-labi','#lafiz-labi'].includes(location.hash))document.fonts.ready.then(()=>get(location.hash.slice(1))?.scrollIntoView({block:'start'}));
+  if(['#ebced-labi','#lafiz-labi'].includes(location.hash))document.fonts.ready.then(()=>{
+    if(!document.body.classList.contains('mobile-mode'))get(location.hash.slice(1))?.scrollIntoView({block:'start'});
+  });
 })();

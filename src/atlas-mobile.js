@@ -8,8 +8,12 @@
   const titles={read:'mReadTitle',map:'instrumentLabel',study:'mStudyTitle',guide:'studyRoute',pages:'husrevTitle',sources:'sources',library:'library'};
   const hashes={read:()=> '#ayet-'+verses[state.id][0].replace(':','-'),map:()=> '#harita',study:()=> '#sayim',guide:()=> '#icaz',pages:()=> '#husrev',sources:()=> '#kaynaklar',library:()=> '#kutuphane'};
   const movements=new Map(),groups=new Map(),initialOpen=new Map();
+  const scrollPositions=new Map();
   const mobileDialogs=[get('mobile-menu'),get('mobile-search'),get('mobile-tools')];
-  let enabled=false,view='read',searchView='read',selectionTarget=null,syncFrame=0,epoch=0;
+  const allDialogs=Array.from(document.querySelectorAll('dialog'));
+  let enabled=false,view='read',searchView='read',selectionTarget=null,syncFrame=0;
+  let scrollLock=null,previousScrollRestoration='auto';
+  let viewportFrame=0;
   const text=(node,value)=>{if(node&&node.textContent!==value)node.textContent=value;};
   const attr=(node,key,value)=>{if(node&&node.getAttribute(key)!==String(value))node.setAttribute(key,String(value));};
   const iconButton=(label,icon,fn)=>{const b=action(label,fn);b.dataset.icon=icon;return b;};
@@ -55,11 +59,59 @@
     if(hash==='#ust'||!hash)return 'read';
     return null;
   }
-  function navigate(next,{write=true,hash=null,scroll=true}={}) {
+  function currentScroll(){return scrollLock?.y??window.scrollY;}
+  function scrollToPosition(y){
+    if(scrollLock){scrollLock.y=y;document.body.style.setProperty('--mobile-scroll-offset',-y+'px');}
+    else window.scrollTo({top:y,behavior:'instant'});
+  }
+  function syncScrollLock(){
+    const lock=enabled&&(allDialogs.some(d=>d.open)||expanded());
+    if(lock&&!scrollLock){
+      scrollLock={y:window.scrollY,x:window.scrollX};
+      document.body.style.setProperty('--mobile-scroll-offset',-scrollLock.y+'px');
+      document.body.classList.add('mobile-scroll-locked');
+    }else if(!lock&&scrollLock){
+      const position=scrollLock;scrollLock=null;
+      document.body.classList.remove('mobile-scroll-locked');document.body.style.removeProperty('--mobile-scroll-offset');
+      window.scrollTo({top:position.y,left:position.x,behavior:'instant'});
+    }
+    syncDialogViewport();
+  }
+  function syncDialogViewport(){
+    const viewport=window.visualViewport;
+    const typing=/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName||'');
+    const keyboard=enabled&&viewport&&Math.abs(viewport.scale-1)<.05&&typing&&innerHeight-viewport.height>120;
+    if(document.body.classList.contains('mobile-keyboard')!==Boolean(keyboard))document.body.classList.toggle('mobile-keyboard',Boolean(keyboard));
+    for(const dialog of allDialogs){
+      const fit=Boolean(keyboard&&dialog.open);
+      if(dialog.classList.contains('mobile-keyboard-fit')!==fit)dialog.classList.toggle('mobile-keyboard-fit',fit);
+      if(fit){
+        for(const [key,value]of [['height',Math.floor(viewport.height)+'px'],['top',Math.floor(viewport.offsetTop)+'px']]){
+          if(dialog.style.getPropertyValue('--mobile-dialog-'+key)!==value)dialog.style.setProperty('--mobile-dialog-'+key,value);
+        }
+      }else if(dialog.style.getPropertyValue('--mobile-dialog-height')){
+        dialog.style.removeProperty('--mobile-dialog-height');dialog.style.removeProperty('--mobile-dialog-top');
+      }
+    }
+  }
+  function scheduleViewport(){
+    if(!enabled||viewportFrame)return;
+    if(!allDialogs.some(d=>d.open)&&!document.body.classList.contains('mobile-keyboard')&&!/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName||''))return;
+    viewportFrame=requestAnimationFrame(()=>{viewportFrame=0;syncDialogViewport();});
+  }
+  window.visualViewport?.addEventListener('resize',scheduleViewport,{passive:true});
+  window.visualViewport?.addEventListener('scroll',scheduleViewport,{passive:true});
+  document.addEventListener('focusin',scheduleViewport);document.addEventListener('focusout',scheduleViewport);
+  const lockWatcher=new MutationObserver(syncScrollLock);
+  allDialogs.forEach(d=>lockWatcher.observe(d,{attributes:true,attributeFilter:['open']}));
+  lockWatcher.observe(document.querySelector('.atlas-grid'),{attributes:true,attributeFilter:['class']});
+  function navigate(next,{write=true,hash=null,scroll=true,reset=false}={}) {
     if(!enabled)return;
+    const changing=next!==view;
+    if(changing)scrollPositions.set(view,currentScroll());
     for(const d of mobileDialogs)if(d.open)d.close();
     if(document.querySelector('.atlas-immersive')&&next!=='map')get('immersive-close').click();
-    view=next;epoch++;document.body.dataset.mobileView=view;
+    view=next;document.body.dataset.mobileView=view;
     text(get('mobile-page-title'),t(titles[view]));
     text(get('mobile-page-hint'),view==='read'?t('mReadHint'):'');get('mobile-page-hint').hidden=view!=='read';
     document.querySelectorAll('[data-mobile-nav]').forEach(b=>{
@@ -73,13 +125,14 @@
       const group=[...groups.keys()].find(d=>d.dataset.mobileGroup==='other-counts');if(group)group.open=true;
     }
     rememberView(write,hash);
-    if(scroll)window.scrollTo({top:0,behavior:'instant'});
-    requestAnimationFrame(()=>{if(!enabled)return;limitAtlasPan();updateMap();});
+    if(scroll&&(changing||reset))scrollToPosition(reset?0:(scrollPositions.get(view)||0));
+    requestAnimationFrame(()=>{if(!enabled||view!=='map')return;limitAtlasPan();updateMap();});
     scheduleSync();
   }
   function openSheet(id,opener=document.activeElement) {
     const dialog=get(id);dialog._mobileOpener=opener;
     if(!dialog.open)dialog.showModal();
+    syncScrollLock();
   }
   function openSearch(target='read') {
     searchView=target;
@@ -167,7 +220,13 @@
 
   // Embedded maps allow normal page scrolling; only expanded maps consume drag.
   const baseLimitPan=limitAtlasPan,basePan=panAtlas,baseNearest=nearest;
+  const baseCenterMapLabel=centerMapLabel;
   function expanded(){return enabled&&document.querySelector('.atlas-immersive')!==null;}
+  centerMapLabel=center=>{
+    if(!enabled)return baseCenterMapLabel(center);
+    const transform=`translate3d(${center.x+atlasView.x}px,${center.y+atlasView.y}px,0) translate(-50%,-50%)`;
+    const node=get('map-center');if(node.style.transform!==transform)node.style.transform=transform;
+  };
   limitAtlasPan=()=>{
     if(!expanded())return baseLimitPan();
     const margin=Math.max(.22,(atlasView.scale-1)/2);
@@ -184,13 +243,88 @@
     for(const node of optionsOnMap){const d=Math.hypot(point.x-node.x,point.y-node.y);if(d<distance){selected=node;distance=d;}}
     return selected||baseNearest(event);
   };
+  // A single owner handles touch gestures. Embedded maps leave scrolling and
+  // page zoom to Safari; expanded maps apply the latest pointer positions once
+  // per frame. Rebase when fingers join/leave to avoid a pan/pinch jump.
+  const mapTouches=new Map();
+  let gestureStart=null,gestureFrame=0,gestureMoved=false,mapBounds=null;
+  function touchSnapshot(){
+    const points=Array.from(mapTouches.values());
+    if(!points.length)return null;
+    const a=points[0],b=points[1]||a;
+    return {count:points.length,x:(a.x+b.x)/2,y:(a.y+b.y)/2,distance:Math.max(1,Math.hypot(a.x-b.x,a.y-b.y)),view:{...atlasView}};
+  }
+  function paintGesture(){
+    gestureFrame=0;
+    if(!gestureStart||!expanded()||!mapTouches.size)return;
+    const point=touchSnapshot(),start=gestureStart;
+    if(point.count!==start.count)return;
+    const moved=Math.hypot(point.x-start.x,point.y-start.y)>7||point.count>1;
+    if(!gestureMoved&&!moved)return;
+    gestureMoved=true;suppressMapClick=true;
+    document.body.classList.add('mobile-interacting');
+    const scale=point.count>1?bound(start.view.scale*point.distance/start.distance,MIN_ZOOM,MAX_ZOOM):start.view.scale;
+    const factor=scale/start.view.scale,cx=mapBounds.width/2,cy=mapBounds.height/2;
+    atlasView.x=point.x-cx-(start.x-cx-start.view.x)*factor;
+    atlasView.y=point.y-cy-(start.y-cy-start.view.y)*factor;
+    const zoomed=atlasView.scale!==scale;atlasView.scale=scale;limitAtlasPan();hideHover();
+    if(zoomed)updateAtlasToolbar();
+    draw();
+  }
+  function flushGesture(){if(gestureFrame){cancelAnimationFrame(gestureFrame);gestureFrame=0;paintGesture();}}
+  function clearMapTouches(){
+    if(gestureFrame)cancelAnimationFrame(gestureFrame);gestureFrame=0;
+    if(mapTouches.size)suppressMapClick=true;
+    for(const id of mapTouches.keys())if(graph.hasPointerCapture(id))graph.releasePointerCapture(id);
+    mapTouches.clear();gestureStart=null;mapBounds=null;
+    document.body.classList.remove('mobile-interacting');
+  }
+  function touchPoint(event){return {x:event.clientX-mapBounds.left,y:event.clientY-mapBounds.top};}
+  graph.addEventListener('pointerdown',event=>{
+    if(!enabled||event.pointerType==='mouse')return;
+    event.stopImmediatePropagation();
+    if(!expanded()){suppressMapClick=false;return;}
+    if(mapTouches.size>=2)return;
+    flushGesture();
+    if(!mapTouches.size){mapBounds=graph.getBoundingClientRect();gestureMoved=false;suppressMapClick=false;}
+    mapTouches.set(event.pointerId,touchPoint(event));
+    graph.setPointerCapture(event.pointerId);gestureStart=touchSnapshot();
+    if(mapTouches.size>1){gestureMoved=true;suppressMapClick=true;hideHover();}
+  },true);
+  graph.addEventListener('pointermove',event=>{
+    if(!enabled||event.pointerType==='mouse')return;
+    event.stopImmediatePropagation();
+    if(!expanded()||!mapTouches.has(event.pointerId))return;
+    mapTouches.set(event.pointerId,touchPoint(event));
+    if(!gestureFrame)gestureFrame=requestAnimationFrame(paintGesture);
+  },true);
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])graph.addEventListener(type,event=>{
+    if(!enabled||event.pointerType==='mouse')return;
+    event.stopImmediatePropagation();
+    if(!mapTouches.has(event.pointerId))return;
+    if(type==='pointercancel'){suppressMapClick=true;clearMapTouches();return;}
+    flushGesture();mapTouches.delete(event.pointerId);
+    if(mapTouches.size)gestureStart=touchSnapshot();else clearMapTouches();
+  },true);
+  addEventListener('blur',clearMapTouches);
+  addEventListener('resize',()=>{if(mapTouches.size)clearMapTouches();});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)clearMapTouches();});
   get('atlas-expand').addEventListener('click',()=>{
     if(!enabled)return;
     get('atlas-camera-panel').hidden=true;attr(get('atlas-camera-toggle'),'aria-expanded',false);
     syncMap();
   });
-  get('immersive-close').addEventListener('click',()=>{if(enabled)syncMap();});
+  get('immersive-close').addEventListener('click',()=>{if(enabled){clearMapTouches();syncMap();}});
+  const baseDrawHusrev=drawHusrevViewport,scanFrames=new Map();
+  drawHusrevViewport=pane=>{
+    if(!enabled)return baseDrawHusrev(pane);
+    if(scanFrames.has(pane))return;
+    scanFrames.set(pane,requestAnimationFrame(()=>{scanFrames.delete(pane);baseDrawHusrev(pane);}));
+  };
   for(const pane of husrevState.panes){
+    for(const type of ['pointerdown','pointermove'])pane.viewport.addEventListener(type,event=>{
+      if(enabled&&event.pointerType!=='mouse'&&!get('husrev-dialog').open)event.stopImmediatePropagation();
+    },true);
     pane.viewport.addEventListener('lostpointercapture',event=>{
       // Transfer implicit touch capture from the image to its viewport without
       // discarding the active finger in the original pinch/pan handler.
@@ -321,12 +455,15 @@
   for(const id of ['reading','word-results','guide-reading','comparison-body','verse-plate-body','husrev-plates'])watcher.observe(get(id),{childList:true,subtree:true});
   const originalSelect=selectVerse;
   selectVerse=(...args)=>{
+    const changed=args[0]!==state.id;
     const searching=enabled&&get('mobile-search').open;
     const destination=enabled?(selectionTarget||(searching?searchView:null)||(args[1]?.scroll&&args[1]?.writeHash!==false?'read':null)):null;
     selectionTarget=null;
-    const value=originalSelect(...args);
+    // The original document-wide smooth scroll races with compact navigation.
+    // Let the compact view restore a single, predictable reading position.
+    const value=enabled?originalSelect(args[0],args[1]?{...args[1],scroll:false}:undefined):originalSelect(...args);
     if(enabled){
-      if(destination)navigate(destination,{write:false});
+      if(destination)navigate(destination,{write:false,reset:changed});
       else rememberView();
       scheduleSync();
     }
@@ -353,6 +490,7 @@
   }
   function activate() {
     if(enabled)return;enabled=true;
+    previousScrollRestoration=history.scrollRestoration;history.scrollRestoration='manual';
     document.body.classList.add('mobile-mode');
     Object.entries(screens).forEach(([name,node])=>node.dataset.mobileScreen=name);
     move(get('mobile-search-trigger'),document.querySelector('.header-inner'));
@@ -377,14 +515,17 @@
     if(!location.hash||location.hash==='#ust'){
       try{const stored=JSON.parse(localStorage.getItem('quran-atlas-experience-v1'));const last=stored?.history?.[0];originalSelect(verseId.has(last)?verseId.get(last):0,{writeHash:false});}catch{originalSelect(0,{writeHash:false});}
     }
-    navigate(explicit||'read',{write:false,hash:location.hash||hashes.read()});
-    const initialEpoch=epoch;document.fonts.ready.then(()=>{if(enabled&&epoch===initialEpoch)window.scrollTo({top:0,behavior:'instant'});});
+    navigate(explicit||'read',{write:false,hash:location.hash||hashes.read(),reset:true});
   }
   function deactivate() {
     if(!enabled)return;
+    clearMapTouches();
     if(document.querySelector('.atlas-immersive'))get('immersive-close').click();
     for(const d of mobileDialogs)if(d.open)d.close();
-    enabled=false;epoch++;
+    enabled=false;
+    syncScrollLock();history.scrollRestoration=previousScrollRestoration;
+    for(const frame of scanFrames.values())cancelAnimationFrame(frame);scanFrames.clear();
+    get('map-center').style.removeProperty('transform');
     for(const node of Array.from(movements.keys()))restore(node);
     for(const d of groups.keys())d.remove();groups.clear();
     for(const [node,open]of initialOpen)if(node.isConnected)node.open=open;initialOpen.clear();
